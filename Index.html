@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>두근두근 학급 추첨기</title>
+  <link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-color: #FFF6F9;
+      --primary: #FF7597;
+      --primary-hover: #FF527B;
+      --secondary: #70D6FF;
+      --accent: #FFD166;
+      --boy-bg: #E8F4FD;
+      --boy-border: #64B5F6;
+      --girl-bg: #FCE4EC;
+      --girl-border: #F06292;
+      --text-main: #4A4A4A;
+    }
+
+    * { box-sizing: border-box; font-family: 'Noto Sans KR', sans-serif; }
+    h1, h2, h3, .cute-font { font-family: 'Jua', 'Noto Sans KR', sans-serif; }
+
+    body {
+      margin: 0;
+      padding: 18px;
+      background-color: var(--bg-color);
+      background-image: radial-gradient(#FFD6E0 1.5px, transparent 1.5px);
+      background-size: 22px 22px;
+      color: var(--text-main);
+    }
+
+    .container { max-width: 1120px; margin: 0 auto; }
+
+    /* 헤더 */
+    header {
+      text-align: center;
+      background: white;
+      padding: 18px;
+      border-radius: 26px;
+      box-shadow: 0 8px 20px rgba(255, 117, 151, 0.14);
+      margin-bottom: 18px;
+      border: 3px solid #FFE3EC;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 2.2rem;
+      color: var(--primary);
+      text-shadow: 2px 2px 0px #FFE3EC;
+    }
+
+    /* 컨트롤 패널 */
+    .control-panel {
+      background: white;
+      padding: 18px;
+      border-radius: 26px;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.05);
+      margin-bottom: 18px;
+      border: 2px solid #F0F4F8;
+    }
+
+    .row-flex {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+    .row-flex:last-child { margin-bottom: 0; }
+
+    /* 버튼 */
+    .btn {
+      border: none;
+      padding: 10px 16px;
+      border-radius: 15px;
+      font-family: 'Jua', 'Noto Sans KR', sans-serif;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: transform 0.15s, background 0.2s;
+      box-shadow: 0 3px 0 rgba(0,0,0,0.12);
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn:active { transform: translateY(2px); box-shadow: none; }
+    .btn-pink { background: var(--primary); color: white; }
+    .btn-pink:hover { background: var(--primary-hover); }
+    .btn-blue { background: var(--secondary); color: #1D3557; }
+    .btn-yellow { background: var(--accent); color: #5C4300; }
+    .btn-gray { background: #EDF2F7; color: #4A5568; }
+    .btn-sm { padding: 6px 12px; font-size: 0.9rem; border-radius: 12px; }
+
+    /* 집단 프리셋 바 */
+    .group-bar {
+      background: #FFFDF5;
+      padding: 12px 16px;
+      border-radius: 18px;
+      border: 2px dashed #FFD166;
+    }
+    .group-chip {
+      display: inline-flex;
+      align-items: center;
+      background: white;
+      border: 2px solid #FFD166;
+      border-radius: 20px;
+      padding: 5px 12px;
+      margin: 3px;
+      font-family: 'Jua', sans-serif;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .group-chip:hover { background: #FFF3CD; }
+    .group-del {
+      margin-left: 7px;
+      color: #FF527B;
+      font-weight: bold;
+      padding: 0 4px;
+    }
+
+    /* 추첨 설정 바 */
+    .draw-box {
+      background: linear-gradient(135deg, #FFF0F5 0%, #E3F2FD 100%);
+      padding: 16px 20px;
+      border-radius: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: center;
+      justify-content: space-between;
+    }
+    select, input[type="number"], input[type="text"] {
+      padding: 8px 12px;
+      border-radius: 12px;
+      border: 2px solid #FFD6E0;
+      font-size: 0.95rem;
+      outline: none;
+      background: white;
+    }
+
+    /* 학생 카드 그리드 */
+    .student-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(135px, 1fr));
+      gap: 14px;
+    }
+
+    .student-card {
+      background: white;
+      border-radius: 22px;
+      padding: 12px 8px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 3px solid #E2E8F0;
+      position: relative;
+      user-select: none;
+      opacity: 0.48;
+      transform: scale(0.96);
+    }
+    .student-card.selected {
+      opacity: 1;
+      transform: scale(1);
+      box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+    }
+    .student-card.boy.selected { background: var(--boy-bg); border-color: var(--boy-border); }
+    .student-card.girl.selected { background: var(--girl-bg); border-color: var(--girl-border); }
+
+    .badge-num {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      background: white;
+      border-radius: 50%;
+      width: 26px;
+      height: 26px;
+      line-height: 26px;
+      font-family: 'Jua', sans-serif;
+      font-size: 0.85rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .badge-check {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      font-size: 1.1rem;
+    }
+    .avatar-img {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: white;
+      margin: 6px auto;
+      border: 3px solid white;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+      display: block;
+    }
+    .student-name {
+      font-family: 'Jua', sans-serif;
+      font-size: 1.15rem;
+      margin-top: 4px;
+    }
+
+    /* 모달 */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      padding: 16px;
+    }
+    .modal-box {
+      background: white;
+      border-radius: 28px;
+      padding: 24px;
+      width: 100%;
+      max-width: 780px;
+      max-height: 92vh;
+      overflow-y: auto;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.25);
+      border: 4px solid #FFE3EC;
+      position: relative;
+    }
+
+    /* 애니메이션 무대 */
+    #stageArea {
+      width: 100%;
+      height: 410px;
+      border-radius: 22px;
+      position: relative;
+      overflow: hidden;
+      margin: 12px 0;
+      border: 3px solid #FFD6E0;
+    }
+
+    /* 1. 달리기 */
+    .stage-race { background: linear-gradient(#87CEEB 0%, #87CEEB 22%, #7BC950 22%, #5DA93A 100%); }
+    .race-lane { position: relative; border-bottom: 2px dashed rgba(255,255,255,0.65); display: flex; align-items: center; }
+    .runner { position: absolute; left: 10px; display: flex; align-items: center; gap: 5px; transition: left 0.09s linear; }
+    .runner img { width: 42px; height: 42px; border-radius: 50%; background: white; border: 2px solid #333; }
+    .runner span { background: white; padding: 2px 8px; border-radius: 10px; font-family: 'Jua'; font-size: 0.85rem; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.15); }
+    .finish-line { position: absolute; right: 45px; top: 0; bottom: 0; width: 14px; background: repeating-linear-gradient(45deg, #222, #222 10px, #fff 10px, #fff 20px); }
+
+    /* 2. 하늘 낙하산 */
+    .stage-sky { background: linear-gradient(180deg, #4FACFE 0%, #00F2FE 76%, #9BE15D 76%, #56AB2F 100%); }
+    .sky-diver { position: absolute; top: 8px; text-align: center; transition: top 0.09s linear; }
+    .sky-diver .chute { font-size: 2.1rem; line-height: 1; }
+    .sky-diver img { width: 44px; height: 44px; border-radius: 50%; background: white; border: 2px solid #FFF; display: block; margin: 0 auto; }
+    .sky-diver span { background: rgba(255,255,255,0.95); padding: 2px 7px; border-radius: 8px; font-family: 'Jua'; font-size: 0.8rem; display: inline-block; margin-top: 2px; }
+
+    /* 3. 비행기 */
+    .stage-plane { background: linear-gradient(180deg, #1E3C72 0%, #2A5298 50%, #6DD5FA 100%); }
+    .plane-flyer { position: absolute; left: 10px; display: flex; align-items: center; gap: 5px; transition: left 0.09s linear; }
+    .plane-flyer img { width: 40px; height: 40px; border-radius: 50%; background: white; border: 2px solid #FFD166; }
+    .plane-flyer span { background: rgba(255,255,255,0.95); padding: 2px 8px; border-radius: 10px; font-family: 'Jua'; font-size: 0.85rem; white-space: nowrap; }
+
+    /* 4. 인형뽑기 */
+    .stage-claw { background: linear-gradient(180deg, #FFF0F5 0%, #FFE3EC 100%); }
+    .claw-arm { position: absolute; top: 0; left: 50%; transform: translateX(-50%); text-align: center; transition: left 0.45s ease; z-index: 10; }
+    .claw-rope { width: 6px; height: 35px; background: #718096; margin: 0 auto; transition: height 0.5s ease; }
+    .claw-hook { font-size: 2.6rem; line-height: 0.8; }
+    .capsule-pit { position: absolute; bottom: 14px; left: 14px; right: 14px; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+    .capsule { width: 74px; height: 74px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #FFF, #FFB5C5); border: 3px solid #FF7597; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 4px 8px rgba(0,0,0,0.12); transition: all 0.4s ease; }
+    .capsule img { width: 38px; height: 38px; border-radius: 50%; }
+    .capsule span { font-family: 'Jua'; font-size: 0.78rem; margin-top: 1px; }
+
+    /* 5. 잠수하기 */
+    .stage-dive { background: linear-gradient(180deg, #A1C4FD 0%, #0096C7 25%, #023E8A 100%); }
+    .diver { position: absolute; top: 12px; text-align: center; transition: top 0.09s linear; }
+    .diver img { width: 44px; height: 44px; border-radius: 50%; border: 3px solid #90E0EF; background: white; display: block; margin: 0 auto; }
+    .diver span { display: inline-block; background: rgba(0,0,0,0.45); color: white; padding: 1px 7px; border-radius: 8px; font-family: 'Jua'; font-size: 0.8rem; margin-top: 2px; }
+
+    /* 6. 마술쇼 */
+    .stage-magic { background: radial-gradient(circle, #4A154B 0%, #9B2C6F 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; padding: 15px; }
+    .magic-hat { font-size: 5.5rem; animation: hatWobble 0.35s infinite alternate; }
+    @keyframes hatWobble { from { transform: rotate(-9deg) scale(1); } to { transform: rotate(9deg) scale(1.08); } }
+    .magic-cards { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 14px; }
+    .magic-pop { background: white; color: #333; padding: 10px 14px; border-radius: 18px; text-align: center; box-shadow: 0 6px 15px rgba(0,0,0,0.25); animation: popIn 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    @keyframes popIn { from { transform: scale(0) rotate(-15deg); opacity: 0; } to { transform: scale(1) rotate(0); opacity: 1; } }
+
+    /* 결과 카드 */
+    .result-grid { display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; margin-top: 18px; }
+    .result-card { background: #FFFDF5; border: 3px solid #FFD166; border-radius: 22px; padding: 16px 12px; text-align: center; width: 138px; position: relative; box-shadow: 0 6px 15px rgba(255, 209, 102, 0.25); }
+    .rank-tag { position: absolute; top: -13px; left: 50%; transform: translateX(-50%); background: #FF7597; color: white; padding: 3px 12px; border-radius: 12px; font-family: 'Jua'; font-size: 0.9rem; white-space: nowrap; }
+
+    /* 명단 편집 테이블 */
+    .edit-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    .edit-table th, .edit-table td { border-bottom: 1px solid #EEE; padding: 8px; text-align: center; }
+    .edit-table input, .edit-table select { width: 100%; padding: 6px; }
+
+    .status-box { text-align: center; padding: 45px 20px; font-family: 'Jua'; font-size: 1.4rem; color: var(--primary); }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>🎈 두근두근 우리 반 추첨기 🎈</h1>
+    <p style="margin: 5px 0 0; color: #888;">추첨할 친구들을 선택하고 신나는 미니게임으로 뽑아보세요!</p>
+  </header>
+
+  <div id="loadingBox" class="status-box">🐰 구글 시트에서 학생 명단을 불러오는 중이에요...</div>
+
+  <div id="mainApp" style="display: none;">
+    <div class="control-panel">
+      <!-- 상단 빠른 선택 & 명단 관리 -->
+      <div class="row-flex" style="justify-content: space-between;">
+        <div class="row-flex" style="margin: 0;">
+          <button class="btn btn-gray btn-sm" onclick="selectAll(true)">✅ 전체 선택</button>
+          <button class="btn btn-gray btn-sm" onclick="selectAll(false)">⬜ 전체 해제</button>
+          <button class="btn btn-blue btn-sm" onclick="selectByFilter('boy')">👦 남자만</button>
+          <button class="btn btn-pink btn-sm" onclick="selectByFilter('girl')">👧 여자만</button>
+          <button class="btn btn-yellow btn-sm" onclick="selectByFilter('odd')">1️⃣ 홀수 번호</button>
+          <button class="btn btn-yellow btn-sm" onclick="selectByFilter('even')">2️⃣ 짝수 번호</button>
+        </div>
+        <button class="btn btn-gray" onclick="openEditModal()">📝 학생 명단 입력/관리</button>
+      </div>
+
+      <!-- 집단 프리셋 영역 -->
+      <div class="group-bar row-flex" style="justify-content: space-between; margin-top: 12px;">
+        <div>
+          <strong class="cute-font" style="color: #D98200; margin-right: 6px;">🏷️ 저장된 집단:</strong>
+          <span id="groupListContainer"></span>
+        </div>
+        <div class="row-flex" style="margin: 0;">
+          <input type="text" id="newGroupName" placeholder="집단 이름 (예: 급식당번)" style="width: 175px;">
+          <button class="btn btn-yellow btn-sm" id="saveGroupBtn" onclick="saveCurrentAsGroup()">💾 현재 선택 집단 저장</button>
+        </div>
+      </div>
+
+      <!-- 추첨 실행 설정 영역 -->
+      <div class="draw-box" style="margin-top: 14px;">
+        <div class="row-flex" style="margin: 0;">
+          <label class="cute-font">뽑을 인원:
+            <input type="number" id="pickCount" value="1" min="1" max="100" style="width: 68px; text-align: center;"> 명
+          </label>
+
+          <label class="cute-font" style="cursor: pointer; background: white; padding: 7px 12px; border-radius: 12px; border: 2px solid #FFD6E0;">
+            <input type="checkbox" id="orderMode"> 🏅 순서 정하기 (1등, 2등...)
+          </label>
+
+          <label class="cute-font">추첨 게임:
+            <select id="gameTheme">
+              <option value="race">🏃‍♂️ 달리기 경주</option>
+              <option value="sky">🪂 하늘에서 낙하산 착지</option>
+              <option value="plane">✈️ 비행기 레이스</option>
+              <option value="claw">🕹️ 두근두근 인형뽑기</option>
+              <option value="dive">🤿 깊은 바다 잠수하기</option>
+              <option value="magic">🎩 신비한 마술쇼</option>
+            </select>
+          </label>
+        </div>
+
+        <button class="btn btn-pink" style="font-size: 1.25rem; padding: 12px 26px;" onclick="startDraw()">
+          🎲 추첨 시작! (<span id="selectedCountBadge">0</span>명 참여)
+        </button>
+      </div>
+    </div>
+
+    <!-- 전체 학생 카드 그리드 -->
+    <div id="studentGrid" class="student-grid"></div>
+  </div>
+</div>
+
+<!-- 1. 추첨 애니메이션 및 결과 모달 -->
+<div id="drawModal" class="modal-overlay">
+  <div class="modal-box" style="max-width: 820px; text-align: center;">
+    <h2 id="drawModalTitle" style="color: var(--primary); margin-top: 0;">🎉 두근두근 추첨 중! 🎉</h2>
+    <div id="stageArea"></div>
+    <div id="resultArea" style="display: none;">
+      <h3 style="color: #FF527B; font-size: 1.6rem; margin: 8px 0;">🎊 축하합니다! 당첨 결과 🎊</h3>
+      <div id="resultCards" class="result-grid"></div>
+      <div style="margin-top: 20px; display: flex; justify-content: center; gap: 10px;">
+        <button class="btn btn-yellow" onclick="startDraw()">🔄 같은 조건으로 다시 뽑기</button>
+        <button class="btn btn-pink" onclick="closeModal('drawModal')">확인 완료</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 2. 학생 명단 입력/편집 모달 -->
+<div id="editModal" class="modal-overlay">
+  <div class="modal-box">
+    <h2 style="color: var(--primary); margin-top: 0;">📝 학생 명단 관리 (구글 시트 영구 저장)</h2>
+    <p style="font-size: 0.9rem; color: #666; margin-top: -6px;">한 번 저장하면 구글 시트에 기록되어 언제든 다시 불러옵니다.</p>
+    <div style="margin-bottom: 10px;">
+      <button class="btn btn-blue btn-sm" onclick="addStudentRow()">➕ 학생 추가하기</button>
+    </div>
+    <table class="edit-table">
+      <thead>
+        <tr>
+          <th style="width: 75px;">번호</th>
+          <th>이름</th>
+          <th style="width: 90px;">성별</th>
+          <th style="width: 110px;">얼굴 바꾸기</th>
+          <th style="width: 75px;">삭제</th>
+        </tr>
+      </thead>
+      <tbody id="editTableBody"></tbody>
+    </table>
+    <div style="text-align: right; margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+      <button class="btn btn-gray" onclick="closeModal('editModal')">취소</button>
+      <button class="btn btn-pink" id="saveStudentBtn" onclick="saveStudentList()">💾 시트에 저장하기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let students = [];
+  let groups = [];
+  let selectedNums = new Set();
+  let animTimer = null;
+
+  // =========================================================================
+  // 100% 자체 내장 귀여운 캐릭터 얼굴 SVG 생성기 (외부 서버 차단 오류 없음)
+  // =========================================================================
+  function getAvatarUrl(seed, gender) {
+    let hash = 0;
+    const str = String(seed || 'default') + '_' + String(gender || '남');
+    for (let i = 0; i < str.length; i++) {
+      hash = ((hash << 5) - hash) + str.charCodeAt(i);
+      hash |= 0;
+    }
+    const pick = (arr) => arr[Math.abs(hash = (hash * 1664525 + 1013904223) | 0) % arr.length];
+
+    const bg = gender === '여' ? pick(['#FFD6E0', '#FFE5EC', '#F3D9FA', '#FFF0F3']) : pick(['#D0EBFF', '#E3FAFC', '#D3F9D8', '#E7F5FF']);
+    const skin = pick(['#FFE0BD', '#FFCD94', '#F8D5C2', '#FFE8D6']);
+    const hair = pick(['#2D2424', '#4A3525', '#6B4423', '#1F2937', '#5C3A21', '#3B2F2F']);
+    const shirt = gender === '여' ? pick(['#FF7597', '#FF9EBB', '#B197FC', '#FFA94D']) : pick(['#4DABF7', '#38D9A9', '#FFD43B', '#748FFC']);
+    const eyeType = Math.abs(hash) % 3;
+    const mouthType = Math.abs(hash >> 3) % 3;
+    const hasGlasses = (Math.abs(hash >> 6) % 5) === 0;
+
+    let backHair = '';
+    let frontHair = '';
+    if (gender === '여') {
+      const style = Math.abs(hash >> 2) % 3;
+      if (style === 0) { // 양갈래
+        backHair = `<circle cx="22" cy="48" r="14" fill="${hair}"/><circle cx="78" cy="48" r="14" fill="${hair}"/><rect x="26" y="28" width="48" height="44" rx="22" fill="${hair}"/>`;
+        frontHair = `<path d="M26 44 Q35 20 50 20 Q65 20 74 44 Q62 34 50 38 Q38 34 26 44 Z" fill="${hair}"/>`;
+      } else if (style === 1) { // 단발머리
+        backHair = `<rect x="24" y="24" width="52" height="52" rx="24" fill="${hair}"/>`;
+        frontHair = `<path d="M25 46 Q28 20 50 20 Q72 20 75 46 Q60 35 50 35 Q40 35 25 46 Z" fill="${hair}"/><circle cx="72" cy="32" r="5" fill="#FF7597"/>`;
+      } else { // 긴 생머리
+        backHair = `<rect x="23" y="24" width="54" height="66" rx="24" fill="${hair}"/>`;
+        frontHair = `<path d="M25 45 Q32 19 50 19 Q68 19 75 45 Q58 33 50 37 Q42 33 25 45 Z" fill="${hair}"/>`;
+      }
+    } else {
+      const style = Math.abs(hash >> 2) % 3;
+      if (style === 0) { // 삐죽삐죽 귀여운 머리
+        frontHair = `<path d="M25 48 C22 25, 38 16, 50 18 C62 16, 78 25, 75 48 C68 35, 58 32, 50 36 C42 32, 32 35, 25 48 Z" fill="${hair}"/><polygon points="44,18 50,10 55,19" fill="${hair}"/>`;
+      } else if (style === 1) { // 바가지/뱅 헤어
+        frontHair = `<path d="M25 47 Q26 19 50 19 Q74 19 75 47 Q60 37 50 37 Q40 37 25 47 Z" fill="${hair}"/>`;
+      } else { // 가르마 헤어
+        frontHair = `<path d="M25 47 Q26 19 52 19 Q74 19 75 47 Q62 32 46 38 Q34 33 25 47 Z" fill="${hair}"/>`;
+      }
+    }
+
+    let eyes = '';
+    if (eyeType === 0) {
+      eyes = `<circle cx="40" cy="52" r="3.6" fill="#2B2D42"/><circle cx="60" cy="52" r="3.6" fill="#2B2D42"/><circle cx="41.2" cy="50.8" r="1.2" fill="#FFF"/><circle cx="61.2" cy="50.8" r="1.2" fill="#FFF"/>`;
+    } else if (eyeType === 1) {
+      eyes = `<path d="M35 53 Q40 47 45 53" stroke="#2B2D42" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M55 53 Q60 47 65 53" stroke="#2B2D42" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+    } else {
+      eyes = `<ellipse cx="40" cy="52" rx="3.5" ry="4.5" fill="#2B2D42"/><ellipse cx="60" cy="52" rx="3.5" ry="4.5" fill="#2B2D42"/><circle cx="41" cy="50" r="1.4" fill="#FFF"/><circle cx="61" cy="50" r="1.4" fill="#FFF"/>`;
+    }
+
+    let mouth = '';
+    if (mouthType === 0) {
+      mouth = `<path d="M44 63 Q50 69 56 63" stroke="#D9534F" stroke-width="2.8" fill="none" stroke-linecap="round"/>`;
+    } else if (mouthType === 1) {
+      mouth = `<path d="M44 62 Q50 71 56 62 Z" fill="#FF6B6B"/>`;
+    } else {
+      mouth = `<path d="M43 63 Q46.5 67 50 63 Q53.5 67 57 63" stroke="#D9534F" stroke-width="2.5" fill="none" stroke-linecap="round"/>`;
+    }
+
+    const glassesSvg = hasGlasses
+      ? `<circle cx="40" cy="52" r="7.5" stroke="#4A5568" stroke-width="2" fill="none"/><circle cx="60" cy="52" r="7.5" stroke="#4A5568" stroke-width="2" fill="none"/><line x1="47.5" y1="52" x2="52.5" y2="52" stroke="#4A5568" stroke-width="2"/>`
+      : '';
+
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+      <rect width="100" height="100" fill="${bg}"/>
+      ${backHair}
+      <path d="M24 96 C24 78, 76 78, 76 96 Z" fill="${shirt}"/>
+      <rect x="44" y="68" width="12" height="12" rx="5" fill="${skin}"/>
+      <circle cx="27" cy="54" r="5" fill="${skin}"/>
+      <circle cx="73" cy="54" r="5" fill="${skin}"/>
+      <rect x="28" y="27" width="44" height="46" rx="21" fill="${skin}"/>
+      <ellipse cx="34" cy="59" rx="4.5" ry="2.8" fill="#FF9AA2" opacity="0.65"/>
+      <ellipse cx="66" cy="59" rx="4.5" ry="2.8" fill="#FF9AA2" opacity="0.65"/>
+      ${eyes}
+      ${glassesSvg}
+      ${mouth}
+      ${frontHair}
+    </svg>`;
+
+    return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+  }
+
+  // =========================================================================
+  // 초기 로딩 및 에러 처리
+  // =========================================================================
+  window.onload = function() {
+    if (typeof google === 'undefined' || !google.script) {
+      showError('이 페이지는 구글 Apps Script 웹앱 주소로 열어야 작동합니다.');
+      return;
+    }
+
+    google.script.run
+      .withSuccessHandler(function(data) {
+        students = (data && data.students) ? data.students : [];
+        groups = (data && data.groups) ? data.groups : [];
+        selectedNums.clear();
+        students.forEach(s => selectedNums.add(s.num));
+
+        document.getElementById('loadingBox').style.display = 'none';
+        document.getElementById('mainApp').style.display = 'block';
+        renderGroups();
+        renderStudents();
+      })
+      .withFailureHandler(function(err) {
+        showError('구글 시트 연결 중 오류가 발생했어요: ' + (err.message || err));
+      })
+      .getInitialData();
+  };
+
+  function showError(msg) {
+    const box = document.getElementById('loadingBox');
+    box.innerHTML = `<div style="color:#E53E3E; font-size:1.1rem; margin-bottom:12px;">⚠️ ${msg}</div>
+                     <button class="btn btn-pink" onclick="location.reload()">🔄 다시 시도하기</button>`;
+  }
+
+  // =========================================================================
+  // 학생 명단 화면 표시 및 선택 기능
+  // =========================================================================
+  function renderStudents() {
+    const grid = document.getElementById('studentGrid');
+    grid.innerHTML = '';
+    students.sort((a, b) => a.num - b.num);
+
+    students.forEach(s => {
+      const isSelected = selectedNums.has(s.num);
+      const card = document.createElement('div');
+      card.className = `student-card ${s.gender === '여' ? 'girl' : 'boy'} ${isSelected ? 'selected' : ''}`;
+      card.onclick = () => toggleStudent(s.num);
+
+      card.innerHTML = `
+        <div class="badge-num">${s.num}</div>
+        <div class="badge-check">${isSelected ? '💖' : '🤍'}</div>
+        <img class="avatar-img" src="${getAvatarUrl(s.avatar, s.gender)}" alt="${s.name}">
+        <div class="student-name">${s.name} <span style="font-size:0.8rem; color:#777;">(${s.gender})</span></div>
+      `;
+      grid.appendChild(card);
+    });
+    document.getElementById('selectedCountBadge').innerText = selectedNums.size;
+  }
+
+  function toggleStudent(num) {
+    if (selectedNums.has(num)) selectedNums.delete(num);
+    else selectedNums.add(num);
+    renderStudents();
+  }
+
+  function selectAll(flag) {
+    selectedNums.clear();
+    if (flag) students.forEach(s => selectedNums.add(s.num));
+    renderStudents();
+  }
+
+  function selectByFilter(type) {
+    selectedNums.clear();
+    students.forEach(s => {
+      if (type === 'boy' && s.gender === '남') selectedNums.add(s.num);
+      if (type === 'girl' && s.gender === '여') selectedNums.add(s.num);
+      if (type === 'odd' && s.num % 2 === 1) selectedNums.add(s.num);
+      if (type === 'even' && s.num % 2 === 0) selectedNums.add(s.num);
+    });
+    renderStudents();
+  }
+
+  // =========================================================================
+  // 집단 프리셋 저장 및 불러오기
+  // =========================================================================
+  function renderGroups() {
+    const container = document.getElementById('groupListContainer');
+    container.innerHTML = '';
+    if (groups.length === 0) {
+      container.innerHTML = '<span style="color:#999; font-size:0.9rem;">저장된 집단이 없습니다.</span>';
+      return;
+    }
+
+    groups.forEach(g => {
+      const chip = document.createElement('span');
+      chip.className = 'group-chip';
+
+      const labelSpan = document.createElement('span');
+      labelSpan.textContent = `📌 ${g.name} (${g.nums.length}명)`;
+      labelSpan.onclick = () => applyGroup(g.name);
+
+      const delSpan = document.createElement('span');
+      delSpan.className = 'group-del';
+      delSpan.textContent = '×';
+      delSpan.title = '집단 삭제';
+      delSpan.onclick = (e) => {
+        e.stopPropagation();
+        removeGroup(g.name);
+      };
+
+      chip.appendChild(labelSpan);
+      chip.appendChild(delSpan);
+      container.appendChild(chip);
+    });
+  }
+
+  function applyGroup(groupName) {
+    const target = groups.find(g => g.name === groupName);
+    if (!target) return;
+    selectedNums.clear();
+    target.nums.forEach(n => {
+      if (students.some(s => s.num === n)) selectedNums.add(n);
+    });
+    renderStudents();
+  }
+
+  function saveCurrentAsGroup() {
+    const nameInput = document.getElementById('newGroupName');
+    const gName = nameInput.value.trim();
+    if (!gName) return alert('집단 이름을 입력해주세요! (예: 급식당번)');
+    if (selectedNums.size === 0) return alert('집단에 포함할 학생을 1명 이상 선택해주세요.');
+
+    const btn = document.getElementById('saveGroupBtn');
+    btn.disabled = true;
+    btn.innerText = '저장 중...';
+
+    const numArr = Array.from(selectedNums).sort((a, b) => a - b);
+    google.script.run
+      .withSuccessHandler(function(updatedGroups) {
+        groups = updatedGroups || [];
+        nameInput.value = '';
+        btn.disabled = false;
+        btn.innerText = '💾 현재 선택 집단 저장';
+        renderGroups();
+      })
+      .withFailureHandler(function(err) {
+        btn.disabled = false;
+        btn.innerText = '💾 현재 선택 집단 저장';
+        alert('집단 저장 실패: ' + (err.message || err));
+      })
+      .saveGroup(gName, numArr);
+  }
+
+  function removeGroup(groupName) {
+    if (!confirm(`'${groupName}' 집단을 삭제할까요?`)) return;
+    google.script.run
+      .withSuccessHandler(function(updatedGroups) {
+        groups = updatedGroups || [];
+        renderGroups();
+      })
+      .withFailureHandler(function(err) {
+        alert('삭제 실패: ' + (err.message || err));
+      })
+      .deleteGroup(groupName);
+  }
+
+  // =========================================================================
+  // 학생 명단 편집 모달
+  // =========================================================================
+  function openEditModal() {
+    const tbody = document.getElementById('editTableBody');
+    tbody.innerHTML = '';
+    students.forEach(s => appendEditRow(s.num, s.name, s.gender, s.avatar));
+    document.getElementById('editModal').style.display = 'flex';
+  }
+
+  function appendEditRow(num, name, gender, avatar) {
+    const tbody = document.getElementById('editTableBody');
+    const tr = document.createElement('tr');
+    const seed = avatar || ('face_' + Math.random().toString(36).substring(2, 8));
+
+    tr.innerHTML = `
+      <td><input type="number" class="ed-num" value="${num}"></td>
+      <td><input type="text" class="ed-name" value="${name}" placeholder="이름 입력"></td>
+      <td>
+        <select class="ed-gender" onchange="updateRowAvatar(this)">
+          <option value="남" ${gender === '남' ? 'selected' : ''}>남</option>
+          <option value="여" ${gender === '여' ? 'selected' : ''}>여</option>
+        </select>
+      </td>
+      <td>
+        <img class="ed-preview" src="${getAvatarUrl(seed, gender)}" style="width:36px; height:36px; border-radius:50%; vertical-align:middle; border:1px solid #ddd;">
+        <input type="hidden" class="ed-seed" value="${seed}">
+        <button type="button" class="btn btn-gray btn-sm" onclick="rerollAvatar(this)">🎲</button>
+      </td>
+      <td><button type="button" class="btn btn-pink btn-sm" onclick="this.closest('tr').remove()">삭제</button></td>
+    `;
+    tbody.appendChild(tr);
+  }
+
+  function updateRowAvatar(selectEl) {
+    const tr = selectEl.closest('tr');
+    const seed = tr.querySelector('.ed-seed').value;
+    tr.querySelector('.ed-preview').src = getAvatarUrl(seed, selectEl.value);
+  }
+
+  function rerollAvatar(btn) {
+    const tr = btn.closest('tr');
+    const newSeed = 'face_' + Math.random().toString(36).substring(2, 9);
+    const gender = tr.querySelector('.ed-gender').value;
+    tr.querySelector('.ed-seed').value = newSeed;
+    tr.querySelector('.ed-preview').src = getAvatarUrl(newSeed, gender);
+  }
+
+  function addStudentRow() {
+    const rows = document.querySelectorAll('#editTableBody tr');
+    let maxNum = 0;
+    rows.forEach(r => {
+      const n = Number(r.querySelector('.ed-num').value) || 0;
+      if (n > maxNum) maxNum = n;
+    });
+    appendEditRow(maxNum + 1, '', '남', 'face_' + Math.random().toString(36).substring(2, 9));
+  }
+
+  function saveStudentList() {
+    const rows = document.querySelectorAll('#editTableBody tr');
+    const newList = [];
+    rows.forEach(tr => {
+      const num = Number(tr.querySelector('.ed-num').value) || 0;
+      const name = tr.querySelector('.ed-name').value.trim();
+      const gender = tr.querySelector('.ed-gender').value;
+      const avatar = tr.querySelector('.ed-seed').value;
+      if (name) newList.push({ num, name, gender, avatar });
+    });
+
+    if (newList.length === 0) return alert('최소 1명 이상의 학생을 입력해주세요.');
+
+    const btn = document.getElementById('saveStudentBtn');
+    btn.innerText = '저장 중...';
+    btn.disabled = true;
+
+    google.script.run
+      .withSuccessHandler(function(savedList) {
+        students = savedList || newList;
+        selectedNums.clear();
+        students.forEach(s => selectedNums.add(s.num));
+        btn.innerText = '💾 시트에 저장하기';
+        btn.disabled = false;
+        closeModal('editModal');
+        renderStudents();
+      })
+      .withFailureHandler(function(err) {
+        btn.innerText = '💾 시트에 저장하기';
+        btn.disabled = false;
+        alert('명단 저장 중 오류 발생: ' + (err.message || err));
+      })
+      .saveStudents(newList);
+  }
+
+  function closeModal(id) {
+    clearInterval(animTimer);
+    document.getElementById(id).style.display = 'none';
+  }
+
+  // =========================================================================
+  // 추첨 및 6종 애니메이션 게임
+  // =========================================================================
+  function startDraw() {
+    const candidates = students.filter(s => selectedNums.has(s.num));
+    const count = Number(document.getElementById('pickCount').value);
+    const isOrder = document.getElementById('orderMode').checked;
+    const theme = document.getElementById('gameTheme').value;
+
+    if (candidates.length === 0) return alert('추첨에 참여할 학생을 1명 이상 선택해주세요!');
+    if (count < 1 || count > candidates.length) {
+      return alert(`뽑을 인원은 1명 이상, 선택된 인원(${candidates.length}명) 이하로 입력해주세요.`);
+    }
+
+    // 무작위 섞기 (순서 뽑기 시 인덱스 순서가 곧 1등, 2등...)
+    const shuffled = [...candidates].sort(() => Math.random() - 0.5);
+    const winners = shuffled.slice(0, count);
+
+    document.getElementById('drawModal').style.display = 'flex';
+    document.getElementById('resultArea').style.display = 'none';
+    const stage = document.getElementById('stageArea');
+    stage.style.display = 'block';
+    stage.className = '';
+    stage.innerHTML = '';
+    clearInterval(animTimer);
+
+    // 화면 출격 인원 구성 (당첨자 전원 + 탈락자 일부 포함 최대 10명)
+    let racers = [...winners];
+    const others = shuffled.slice(count);
+    while (racers.length < Math.min(candidates.length, 10) && others.length > 0) {
+      racers.push(others.shift());
+    }
+    racers.sort(() => Math.random() - 0.5);
+
+    if (theme === 'race') runHorizontalRace(stage, racers, winners, isOrder, 'stage-race', '🏃');
+    else if (theme === 'plane') runHorizontalRace(stage, racers, winners, isOrder, 'stage-plane', '✈️');
+    else if (theme === 'sky') runVerticalRace(stage, racers, winners, isOrder, 'stage-sky', '🪂');
+    else if (theme === 'dive') runVerticalRace(stage, racers, winners, isOrder, 'stage-dive', '🤿');
+    else if (theme === 'claw') runClawMachine(stage, racers, winners, isOrder);
+    else if (theme === 'magic') runMagicShow(stage, winners, isOrder);
+  }
+
+  // 1. 달리기 & 3. 비행기 레이스
+  function runHorizontalRace(stage, racers, winners, isOrder, bgClass, icon) {
+    stage.classList.add(bgClass);
+    stage.innerHTML = '<div class="finish-line"></div>';
+    const laneHeight = Math.floor(404 / racers.length);
+    const winnerMap = new Map(winners.map((w, idx) => [w.num, idx]));
+
+    const objs = racers.map(s => {
+      const lane = document.createElement('div');
+      lane.className = 'race-lane';
+      lane.style.height = laneHeight + 'px';
+
+      const el = document.createElement('div');
+      el.className = 'runner';
+      el.innerHTML = `<img src="${getAvatarUrl(s.avatar, s.gender)}"><span>${icon} ${s.name}</span>`;
+      lane.appendChild(el);
+      stage.appendChild(lane);
+
+      const rank = winnerMap.has(s.num) ? winnerMap.get(s.num) : 99;
+      return { el, pos: 10, rank };
+    });
+
+    const targetX = (stage.clientWidth || 720) - 155;
+    let tick = 0;
+    animTimer = setInterval(() => {
+      tick++;
+      let allWinnersDone = true;
+      objs.forEach(o => {
+        const speed = o.rank < 99 ? (14.5 - o.rank * 0.65) + Math.random() * 5 : 6 + Math.random() * 6.5;
+        o.pos = Math.min(targetX, o.pos + speed);
+        o.el.style.left = o.pos + 'px';
+        if (o.rank < 99 && o.pos < targetX) allWinnersDone = false;
+      });
+
+      if (allWinnersDone || tick > 60) {
+        clearInterval(animTimer);
+        setTimeout(() => showResults(winners, isOrder), 550);
+      }
+    }, 80);
+  }
+
+  // 2. 하늘 낙하산 & 5. 잠수하기
+  function runVerticalRace(stage, racers, winners, isOrder, bgClass, icon) {
+    stage.classList.add(bgClass);
+    const width = stage.clientWidth || 720;
+    const colWidth = Math.floor((width - 30) / racers.length);
+    const winnerMap = new Map(winners.map((w, idx) => [w.num, idx]));
+
+    const objs = racers.map((s, i) => {
+      const el = document.createElement('div');
+      el.className = bgClass === 'stage-sky' ? 'sky-diver' : 'diver';
+      el.style.left = (15 + i * colWidth) + 'px';
+      el.style.width = colWidth + 'px';
+      el.innerHTML = `<div class="chute">${icon}</div><img src="${getAvatarUrl(s.avatar, s.gender)}"><span>${s.name}</span>`;
+      stage.appendChild(el);
+
+      const rank = winnerMap.has(s.num) ? winnerMap.get(s.num) : 99;
+      return { el, pos: 10, rank };
+    });
+
+    const targetY = 295;
+    let tick = 0;
+    animTimer = setInterval(() => {
+      tick++;
+      let allWinnersDone = true;
+      objs.forEach(o => {
+        const speed = o.rank < 99 ? (11 - o.rank * 0.45) + Math.random() * 4.5 : 4.5 + Math.random() * 5.5;
+        o.pos = Math.min(targetY, o.pos + speed);
+        o.el.style.top = o.pos + 'px';
+        if (o.rank < 99 && o.pos < targetY) allWinnersDone = false;
+      });
+
+      if (allWinnersDone || tick > 60) {
+        clearInterval(animTimer);
+        setTimeout(() => showResults(winners, isOrder), 550);
+      }
+    }, 80);
+  }
+
+  // 4. 인형뽑기
+  function runClawMachine(stage, racers, winners, isOrder) {
+    stage.classList.add('stage-claw');
+    stage.innerHTML = `
+      <div class="claw-arm" id="clawArm">
+        <div class="claw-rope" id="clawRope"></div>
+        <div class="claw-hook">🪝</div>
+      </div>
+      <div class="capsule-pit" id="capsulePit"></div>
+    `;
+    const pit = document.getElementById('capsulePit');
+    racers.forEach(s => {
+      const cap = document.createElement('div');
+      cap.className = 'capsule';
+      cap.id = 'cap-' + s.num;
+      cap.innerHTML = `<img src="${getAvatarUrl(s.avatar, s.gender)}"><span>${s.name}</span>`;
+      pit.appendChild(cap);
+    });
+
+    let step = 0;
+    const arm = document.getElementById('clawArm');
+    const rope = document.getElementById('clawRope');
+
+    animTimer = setInterval(() => {
+      step++;
+      if (step <= 4) {
+        arm.style.left = (20 + Math.random() * 60) + '%';
+      } else if (step === 5) {
+        const targetEl = document.getElementById('cap-' + winners[0].num);
+        if (targetEl) {
+          const rect = targetEl.getBoundingClientRect();
+          const stageRect = stage.getBoundingClientRect();
+          arm.style.left = (rect.left - stageRect.left + 37) + 'px';
+        }
+        rope.style.height = '230px';
+      } else if (step === 7) {
+        rope.style.height = '35px';
+        winners.forEach(w => {
+          const el = document.getElementById('cap-' + w.num);
+          if (el) {
+            el.style.transform = 'translateY(-135px) scale(1.22)';
+            el.style.borderColor = '#FFD166';
+            el.style.boxShadow = '0 0 22px #FFD166';
+          }
+        });
+      } else if (step >= 9) {
+        clearInterval(animTimer);
+        showResults(winners, isOrder);
+      }
+    }, 520);
+  }
+
+  // 6. 마술쇼
+  function runMagicShow(stage, winners, isOrder) {
+    stage.classList.add('stage-magic');
+    stage.innerHTML = `
+      <div class="magic-hat">🎩</div>
+      <div id="magicText" class="cute-font" style="font-size:1.35rem; margin-top:8px;">수리수리 마수리~ 누가 나올까요? ✨</div>
+      <div class="magic-cards" id="magicCards"></div>
+    `;
+
+    let idx = 0;
+    animTimer = setInterval(() => {
+      if (idx < winners.length) {
+        const w = winners[idx];
+        const card = document.createElement('div');
+        card.className = 'magic-pop';
+        const rankLabel = isOrder ? `<div style="color:#FF527B; font-family:'Jua'; font-size:0.9rem;">🏅 ${idx + 1}번째 등장!</div>` : '';
+        card.innerHTML = `
+          ${rankLabel}
+          <img src="${getAvatarUrl(w.avatar, w.gender)}" style="width:62px; height:62px; border-radius:50%;">
+          <div class="cute-font" style="font-size:1.1rem; margin-top:4px;">${w.name}</div>
+        `;
+        document.getElementById('magicCards').appendChild(card);
+        idx++;
+      } else {
+        clearInterval(animTimer);
+        document.getElementById('magicText').innerText = '짠! 마술 모자에서 모두 등장했어요! 🎉';
+        setTimeout(() => showResults(winners, isOrder), 1100);
+      }
+    }, 800);
+  }
+
+  // 최종 결과 표시
+  function showResults(winners, isOrder) {
+    document.getElementById('stageArea').style.display = 'none';
+    const resultArea = document.getElementById('resultArea');
+    const cardsBox = document.getElementById('resultCards');
+    cardsBox.innerHTML = '';
+
+    winners.forEach((w, idx) => {
+      const card = document.createElement('div');
+      card.className = 'result-card';
+      const rankHtml = isOrder ? `<div class="rank-tag">🏅 ${idx + 1}등 (순서 ${idx + 1})</div>` : `<div class="rank-tag">🎉 당첨!</div>`;
+      card.innerHTML = `
+        ${rankHtml}
+        <img src="${getAvatarUrl(w.avatar, w.gender)}" style="width:76px; height:76px; border-radius:50%; margin-top:8px;">
+        <div class="cute-font" style="font-size:1.25rem; margin-top:6px;">${w.num}번 ${w.name}</div>
+      `;
+      cardsBox.appendChild(card);
+    });
+
+    resultArea.style.display = 'block';
+  }
+</script>
+</body>
+</html>
